@@ -1,26 +1,55 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+/* Light-only theme variables */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --page-bg: #ffffff;
+  --header-bg: #728e4a;
+
+  /* brand scale */
+  --brand-102: #fbfdf8;
+  --brand-103: #f2f8e9;
+  --brand-100: #d2e6b5;
+  --brand-200: #c1db9b;
+  --brand-300: #b1cf86;
+  --brand-400: #a0c172;
+  --brand-500: #8eb15c;
+  --brand-600: #728e4a;
+
+  /* UI roles */
+  --btn-bg: var(--brand-500);
+  --btn-bg-hover: var(--brand-400);
+  --ring: var(--brand-400);
+  --accent: var(--brand-300);
+
+  /* Charts */
+  --bar-process: var(--brand-500);
+  --bar-fuel: var(--brand-300);
+  --bar-electric: var(--brand-200);
+
+  --card-bg: var(--brand-102);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.card {
+  @apply border-b border-gray-200 dark:border-gray-800;
+  background: var(--brand-600);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.btn {
+  @apply inline-flex items-center px-3 py-2 rounded-md text-white disabled:opacity-60 disabled:cursor-not-allowed;
+  background: var(--btn-bg);
 }
+.btn:hover { background: var(--btn-bg-hover); }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.input {
+  @apply w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none;
+  box-shadow: 0 0 0 2px transparent;
+}
+.input:focus { box-shadow: 0 0 0 2px var(--ring); }
+
+.card {
+  @apply rounded-xl border shadow-sm p-4;
+  background: var(--card-bg);
+  border-color: theme('colors.brand.300');
 }

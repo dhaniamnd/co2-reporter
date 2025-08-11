@@ -1,103 +1,93 @@
-import Image from "next/image";
+'use client';
+import { useMemo, useState } from 'react';
+import Dropzone from '@/components/Dropzone';
+import FactorsPanel from '@/components/FactorsPanel';
+import MonthlyChart from '@/components/MonthlyChart';
+import ResultsTable from '@/components/ResultsTable';
+import SummaryCards from '@/components/SummaryCards';
+import { parseWorkbook } from '@/lib/parser';
+import { calcRow, type Factors } from '@/lib/csi';
+import { aggregateBy, aggregateMonthly } from '@/lib/aggregate';
+import { exportCSV } from '@/lib/export';
+import type { OutputRow } from '@/types';
 
-export default function Home() {
+export default function Page() {
+  const [rows, setRows] = useState<OutputRow[]>([]);
+  const [factors, setFactors] = useState<Factors>({
+    processEF_tCO2_per_tClinker: 0.525, // B1 factor
+    fuelEF_tCO2_per_GJ: 0.0946,
+    gridEF_tCO2_per_MWh: 0.8,
+  });
+
+  // Derived filters
+  const years = useMemo(() => Array.from(new Set(rows.map(r => new Date(r.Date).getFullYear()))).sort((a,b)=>a-b), [rows]);
+  const plants = useMemo(() => Array.from(new Set(rows.map(r => r.Plant))).sort(), [rows]);
+  const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined);
+  const [selectedPlant, setSelectedPlant] = useState<string>('All');
+  const effectiveYear = selectedYear ?? (years.length ? years[years.length-1] : new Date().getFullYear());
+
+  const totalsByPlant = useMemo(() => aggregateBy(rows, 'Plant'), [rows]);
+  const monthlyData = useMemo(() => aggregateMonthly(rows, { year: effectiveYear, plant: selectedPlant === 'All' ? undefined : selectedPlant }), [rows, effectiveYear, selectedPlant]);
+  const grandTotal = useMemo(() => rows.reduce((a, r) => a + r.Total_tCO2, 0), [rows]);
+
+  const onFiles = async (files: File[]) => {
+    const all: OutputRow[] = [];
+    for (const f of files) {
+      const wbRows = await parseWorkbook(f);
+      const computed = wbRows.map(r => calcRow(r, factors));
+      all.push(...computed);
+    }
+    setRows(all);
+  };
+
+  const onExport = () => exportCSV(rows, 'co2-report.csv');
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="space-y-6">
+      <div className="grid gap-6 md:grid-cols-3">
+        <div className="md:col-span-2 card">
+          <h2 className="mb-2 text-lg font-semibold">1) Upload Excel</h2>
+          <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">Upload a full production year per plant (12 monthly rows). You can also drop multiple plants/years at once. Uses B1 for process emissions.</p>
+          <Dropzone onFiles={onFiles} />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <div className="card">
+          <h2 className="mb-2 text-lg font-semibold">2) Emission Factors</h2>
+          <FactorsPanel value={factors} onChange={setFactors} onRecalc={() => setRows(prev => prev.map(r => calcRow(r.input, factors)))} />
+        </div>
+      </div>
+
+      <SummaryCards grandTotal={grandTotal} count={rows.length} />
+
+      <div className="card">
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <div>
+            <label className="label">Year</label>
+            <select className="input" value={effectiveYear} onChange={e => setSelectedYear(Number(e.target.value))}>
+              {years.length === 0 && <option value={effectiveYear}>{effectiveYear}</option>}
+              {years.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="label">Plant</label>
+            <select className="input" value={selectedPlant} onChange={e => setSelectedPlant(e.target.value)}>
+              <option value="All">All</option>
+              {plants.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
+        </div>
+        <h3 className="mb-2 text-lg font-semibold">Emissions by Month</h3>
+        <MonthlyChart data={monthlyData} />
+      </div>
+
+      <div className="card">
+        <h3 className="mb-2 text-lg font-semibold">Detailed Results</h3>
+        <ResultsTable rows={rows} totals={Object.fromEntries(totalsByPlant.map(t => [t.Plant, t.Total_tCO2]))} />
+      </div>
+
+      <div className="card ">
+        <h3 className="mb-2 text-lg font-semibold">Actions</h3>
+        <button className="btn bg-indigo-600 text-white" onClick={onExport}>Export CSV</button>
+      </div>
     </div>
   );
 }
