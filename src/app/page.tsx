@@ -8,7 +8,7 @@ import SummaryCards from '@/components/SummaryCards';
 import { parseWorkbook } from '@/lib/parser';
 import { calcRow, type Factors } from '@/lib/csi';
 import { aggregateBy, aggregateMonthly } from '@/lib/aggregate';
-import { exportCSV } from '@/lib/export';
+import { exportCSV, exportXLSX, exportPDFMonthly } from '@/lib/export';
 import type { OutputRow } from '@/types';
 
 export default function Page() {
@@ -41,6 +41,33 @@ export default function Page() {
   };
 
   const onExport = () => exportCSV(rows, 'co2-report.csv');
+  const onExportXLSX = () => exportXLSX(rows, `co2-report-${effectiveYear}.xlsx`);
+  const onExportPDF = () =>
+    exportPDFMonthly(
+      monthlyData.map((m: any) => {
+        const monthKey = m.month ?? m.Month; // accept either, prefer lowercase
+        const proc = Number(m.Process_tCO2 || 0);
+        const fuel = Number(m.Fuel_tCO2 || 0);
+        const elec = Number(m.Electric_tCO2 || 0);
+        return {
+          month: monthKey,
+          Process_tCO2: proc,
+          Fuel_tCO2: fuel,
+          Electric_tCO2: elec,
+          Total_tCO2: proc + fuel + elec,
+        };
+      }),
+      {
+        title: 'Cement Plant CO2 Emission Monthly Report',
+        plant: selectedPlant,
+        year: effectiveYear,
+        factors,
+      },
+      `co2-monthly-${effectiveYear}-${selectedPlant}.pdf`,
+      '#monthly-chart'
+    );
+
+
 
   return (
     <div className="space-y-6">
@@ -84,9 +111,10 @@ export default function Page() {
         <ResultsTable rows={rows} totals={Object.fromEntries(totalsByPlant.map(t => [t.Plant, t.Total_tCO2]))} />
       </div>
 
-      <div className="card ">
-        <h3 className="mb-2 text-lg font-semibold">Actions</h3>
-        <button className="btn bg-indigo-600 text-white" onClick={onExport}>Export CSV</button>
+      <div className="flex flex-wrap gap-3">
+        <button className="btn" onClick={onExport}>Export CSV</button>
+        <button className="btn" onClick={onExportXLSX}>Export Excel (.xlsx)</button>
+        <button className="btn" onClick={onExportPDF}>Export PDF</button>
       </div>
     </div>
   );

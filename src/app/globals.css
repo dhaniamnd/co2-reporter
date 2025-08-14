@@ -29,6 +29,10 @@
   --bar-electric: var(--brand-200);
 
   --card-bg: var(--brand-102);
+
+  /* line chart colors */
+  --line-scope1: var(--brand-500);
+  --line-kpi:    var(--brand-400);
 }
 
 .card {

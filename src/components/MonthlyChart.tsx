@@ -1,27 +1,49 @@
 'use client';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from 'recharts';
 
 type D = {
-  Month: string; // Jan, Feb, ...
-  Process_tCO2: number;
+  month: string;              // e.g. "2022-01"
+  Process_tCO2: number;       // monthly totals
   Fuel_tCO2: number;
   Electric_tCO2: number;
-  Total_tCO2: number;
 };
 
 export default function MonthlyChart({ data }: { data: D[] }) {
   return (
-    <div className="h-80 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+    <div id="monthly-chart" className="h-72 w-full">
+      <ResponsiveContainer>
+        <BarChart
+          data={data}
+          margin={{ top: 8, right: 16, bottom: 8, left: 0 }}
+          barCategoryGap="18%"  // distance between month groups
+          barGap={4}            // spacing between bars inside a group
+        >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="Month" tick={{ fontSize: 12 }} />
-          <YAxis tick={{ fontSize: 12 }} />
-          <Tooltip formatter={(v: any) => Number(v).toLocaleString()} />
+          <XAxis dataKey="month" />
+          <YAxis
+            width={70}
+            tickFormatter={(v) => Number(v).toLocaleString()}
+          />
+          <Tooltip
+            formatter={(v: number) =>
+              Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 })
+            }
+          />
           <Legend />
-          <Bar dataKey="Process_tCO2"  stackId="a" name="Process"  fill="var(--bar-process)" />
-          <Bar dataKey="Fuel_tCO2"     stackId="a" name="Fuel"     fill="var(--bar-fuel)" />
-          <Bar dataKey="Electric_tCO2" stackId="a" name="Electric" fill="var(--bar-electric)" />
+
+          {/* Side-by-side bars: simply omit stackId */}
+          <Bar dataKey="Process_tCO2"  name="Process"  fill="var(--bar-process)" />
+          <Bar dataKey="Fuel_tCO2"     name="Fuel"     fill="var(--bar-fuel)" />
+          <Bar dataKey="Electric_tCO2" name="Electric" fill="var(--bar-electric)" />
         </BarChart>
       </ResponsiveContainer>
     </div>

@@ -8,6 +8,11 @@ export type Factors = {
   gridEF_tCO2_per_MWh: number;         // indirect electricity
 };
 
+// CSI/GCCA B1 + EF-based combustion & grid electricity
+// Process_tCO2 = Clinker_t × EF_proc
+// Fuel_tCO2    = KilnFuel_GJ × EF_fuel
+// Electric_tCO2= Electricity_MWh × EF_grid
+// Total        = Process + Fuel + Electric
 export function calcRow(input: InputRow, f: Factors): OutputRow {
   const d = new Date(input.Date);
   const Process_tCO2 = input.Clinker_t * f.processEF_tCO2_per_tClinker;

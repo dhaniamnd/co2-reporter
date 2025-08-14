@@ -6,9 +6,9 @@ export default function ResultsTable({ rows, totals }: { rows: OutputRow[]; tota
     <div className="overflow-auto">
       <table className="min-w-full border-collapse text-sm">
         <thead>
-          <tr className="bg-[var(--brand-100)]">
+          <tr className=" bg-[var(--brand-100)]">
             {['Plant','Date','Month','Clinker (t)','Fuel (GJ)','Elec (MWh)','Process tCO₂','Fuel tCO₂','Electric tCO₂','Total tCO₂'].map(h => (
-              <th key={h} className="whitespace-nowrap border-b px-3 py-2 text-left font-semibold">{h}</th>
+              <th key={h} className="border border-white whitespace-nowrap border-b px-3 py-2 text-left font-semibold">{h}</th>
             ))}
           </tr>
         </thead>

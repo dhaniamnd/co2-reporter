@@ -13,7 +13,7 @@ export function aggregateBy(rows: OutputRow[], by: 'Plant' | 'Month') {
 export function aggregateMonthly(rows: OutputRow[], opts: { year: number, plant?: string }) {
   const { year, plant } = opts;
   const months = Array.from({ length: 12 }, (_, i) => ({
-    Month: monthLabel(i + 1),
+    month: monthLabel(i + 1),
     mkey: `${year}-${String(i+1).padStart(2,'0')}`,
     Process_tCO2: 0,
     Fuel_tCO2: 0,
