@@ -3,6 +3,10 @@ import { InputRowSchema } from './schema';
 import type { InputRow } from '@/types';
 import { toNumber, guessYearFromFilename, normalize } from './utils';
 
+// SAFE accessor: never index an object with an undefined key
+const pick = (obj: Record<string, any>, key?: string) =>
+  (key ? obj[key] : undefined);
+
 // Heuristic, supports both tidy row-wise and matrix "indicator vs plant" layouts
 export async function parseWorkbook(file: File): Promise<InputRow[]> {
   const buf = await file.arrayBuffer();
@@ -25,22 +29,23 @@ export async function parseWorkbook(file: File): Promise<InputRow[]> {
   };
 
   for (const raw of json) {
-    const plantK = pickKey(raw, ['plant','pabrik','company','perusahaan','nama']);
-    const dateK  = pickKey(raw, ['date','tanggal','period','periode','year','tahun','month','bulan']);
+    const plantK   = pickKey(raw, ['plant','pabrik','company','perusahaan','nama']);
+    const dateK    = pickKey(raw, ['date','tanggal','period','periode','year','tahun','month','bulan']);
     const clinkerK = pickKey(raw, ['clinker','produksiklinker']);
-    const fuelK  = pickKey(raw, ['kilnfuel','fuel_gj','fuel','energi','gj']);
-    const elecK  = pickKey(raw, ['electricity','listrik','mwh']);
+    const fuelK    = pickKey(raw, ['kilnfuel','fuel_gj','fuel','energi','gj']);
+    const elecK    = pickKey(raw, ['electricity','listrik','mwh']);
 
     if (plantK && dateK && clinkerK) {
-      const yearMaybe = /^(?:20\d{2})$/.test(String(raw[dateK])) ? Number(raw[dateK]) : undefined;
-      const d = yearMaybe ? new Date(yearMaybe, 11, 31) : new Date(raw[dateK]);
+      const dateRaw = pick(raw, dateK);
+      const yearMaybe = /^(?:20\d{2})$/.test(String(dateRaw)) ? Number(dateRaw) : undefined;
+      const d = yearMaybe ? new Date(yearMaybe, 11, 31) : new Date(dateRaw as any);
 
       const obj: InputRow = {
-        Plant: String(raw[plantK] ?? ''),
+        Plant: String(pick(raw, plantK) ?? ''),
         Date: d,
-        Clinker_t: toNumber(raw[clinkerK]) || 0,
-        KilnFuel_GJ: toNumber(raw[fuelK]) || 0,
-        Electricity_MWh: toNumber(raw[elecK]) || 0,
+        Clinker_t: toNumber(pick(raw, clinkerK)) || 0,
+        KilnFuel_GJ: toNumber(pick(raw, fuelK)) || 0,        // <-- safe access
+        Electricity_MWh: toNumber(pick(raw, elecK)) || 0,    // <-- safe access
       };
 
       const parsed = InputRowSchema.safeParse(obj);
