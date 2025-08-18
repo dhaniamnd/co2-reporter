@@ -17,7 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </header>
         <main className="container py-6">{children}</main>
-        <footer className="container py-8 text-center text-sm text-gray-500">Built with Next.js • Tailwind</footer>
+        <footer className="container py-8 text-center text-sm text-gray-500"></footer>
       </body>
     </html>
   );

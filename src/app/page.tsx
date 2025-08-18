@@ -9,6 +9,7 @@ import { parseWorkbook } from '@/lib/parser';
 import { calcRow, type Factors } from '@/lib/csi';
 import { aggregateBy, aggregateMonthly } from '@/lib/aggregate';
 import { exportCSV, exportXLSX, exportPDFMonthly } from '@/lib/export';
+import { downloadTemplateXLSX } from '@/lib/template';
 import type { OutputRow } from '@/types';
 
 export default function Page() {
@@ -67,8 +68,6 @@ export default function Page() {
       '#monthly-chart'
     );
 
-
-
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-3">
@@ -76,6 +75,25 @@ export default function Page() {
           <h2 className="mb-2 text-lg font-semibold">1) Upload Excel</h2>
           <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">Upload a full production year per plant (12 monthly rows). You can also drop multiple plants/years at once. Uses B1 for process emissions.</p>
           <Dropzone onFiles={onFiles} />
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={() =>
+                downloadTemplateXLSX({
+                  year: effectiveYear,
+                  plant: selectedPlant === 'All' ? 'YourPlant' : selectedPlant
+                })
+              }
+              className="btn outline"
+              title="Download a blank Excel template for one plant-year"
+            >
+              Download Excel Template
+            </button>
+            <p className="mt-2 text-xs text-gray-600">
+              The template has 12 rows (one per month) and the exact headers the app expects.
+              Fill either direct energy columns or the SHC/SPC options, not both.
+            </p>
+          </div>
         </div>
         <div className="card">
           <h2 className="mb-2 text-lg font-semibold">2) Emission Factors</h2>
